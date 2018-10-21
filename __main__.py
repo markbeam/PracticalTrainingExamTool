@@ -2,8 +2,7 @@ import json
 import requests
 from bs4 import BeautifulSoup
 
-__DOMAIN__ = 'http://{}/'
-# __INDEX__ = __DOMAIN__ + 'index.php'
+__DOMAIN__ = 'http://{}/'.format(input('请输入服务器ip: '))
 __LOGIN__ = __DOMAIN__ + 'exam_login.php'
 __LOGOUT__ = __DOMAIN__ + 'exam_login.php?cmd=logout'
 # 选择考试试卷
@@ -14,11 +13,8 @@ __KS__ = __DOMAIN__ + 'redir.php?catalog_id=6&cmd=dati'
 __CHENGNUO__ = __DOMAIN__ + 'redir.php?catalog_id=6&cmd=tijiao&mode=exam'
 
 if __name__ == '__main__':
-    ip = input('请输入服务器ip: ')
-    __DOMAIN__ = __DOMAIN__.format(ip)
-
     # 题库答案
-    with open('answer.json', 'r', encoding='gbk') as f_ans:
+    with open('answer.json', 'r', encoding='utf8') as f_ans:
         ans_lst = json.load(f_ans)
     isChange = False
 
@@ -90,18 +86,20 @@ if __name__ == '__main__':
             start = ti.text.find('、')
             timu = ti.text[start + 1:].strip()
 
-            # 答案不存在
+            # 答案不存在, 需要自己作答
             if timu not in ans_lst:
                 print('\t' + ti.text)
 
-                # 遍历答案
+                # 遍历输出答案
                 for opts in ti.parent.select('li'):
                     value = opts.find('input')['value']
                     label = opts.find('label').text.strip()
                     print('\t\t{}: {}'.format(value, label))
 
+                # 填写答案
                 input_ans = input('\t答案: ')
 
+                # 记录答案
                 ans_lst[timu] = input_ans
                 isChange = True
 
@@ -110,7 +108,7 @@ if __name__ == '__main__':
             _data_last['ti_{}'.format(ti_no)] = ans_lst[timu]
 
     print('[+] 题目作答完毕！')
-    is_submit = input('是否顺便帮您提交试卷？否则自行网页提交[0|1]: ')
+    is_submit = input('是否顺便帮您提交试卷？否则自行网页提交[0/1]: ')
 
     # 提交试卷 1
     if is_submit == '1':
@@ -137,7 +135,7 @@ if __name__ == '__main__':
         print('[-] 请自行登录网页提交您的试卷,否则成绩无效！')
 
     if isChange:
-        with open('answer.json', 'w', encoding='gbk') as f_ans:
+        with open('answer.json', 'w', encoding='utf8', newline='\n') as f_ans:
             json.dump(ans_lst, f_ans, ensure_ascii=False, indent=4)
             print('[+] 题库答案已更新')
 
